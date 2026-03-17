@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Personal AI - Inspired by Kimi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        kimi: {
+                            bg: '#0a0a0a',
+                            surface: '#141414',
+                            surfaceLight: '#1a1a1a',
+                            border: '#262626',
+                            accent: '#10b981',
+                            accentHover: '#059669',
+                            text: '#e5e5e5',
+                            textMuted: '#737373',
+                            textSubtle: '#525252',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient': 'gradient 8s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.1)' },
+                            '100%': { boxShadow: '0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+        }
+        
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .glass-input {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-input:focus {
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            background: rgba(26, 26, 26, 1);
+        }
+        
+        .message-bubble {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .message-bubble::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+        
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+        }
+        
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .orb {
+            background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.3), transparent 70%);
+            filter: blur(40px);
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+
+    <!-- Background Effects -->
+    <div class="fixed inset-0 grid-bg pointer-events-none"></div>
+    <div class="fixed top-0 left-1/4 w-96 h-96 orb opacity-30 animate-float pointer-events-none"></div>
+    <div class="fixed bottom-0 right-1/4 w-96 h-96 orb opacity-20 animate-float pointer-events-none" style="animation-delay: -3s;"></div>
+
+    <!-- Main Layout -->
+    <div class="relative h-full flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <header class="flex items-center justify-between py-4 border-b border-kimi-border/50 glass-panel px-6 rounded-2xl mt-4 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-kimi-bg animate-pulse"></div>
+                </div>
+                <div>
+                    <h1 class="font-semibold text-kimi-text tracking-tight">Personal AI</h1>
+                    <p class="text-xs text-kimi-textMuted flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Online & Ready
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button class="p-2 rounded-lg hover:bg-white/5 transition-colors text-kimi-textMuted hover:text-kimi-text" title="Settings">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+                <button class="p-2 rounded-lg hover:bg-white/5 transition-colors text-kimi-textMuted hover:text-kimi-text" title="History">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-kimi-border flex items-center justify-center text-xs font-medium cursor-pointer hover:border-emerald-500/50 transition-colors">
+                    JD
+                </div>
+            </div>
+        </header>
+
+        <!-- Chat Container -->
+        <div class="flex-1 flex gap-6 overflow-hidden pb-4">
+            
+            <!-- Sidebar (Collapsible on mobile) -->
+            <aside class="hidden lg:flex flex-col w-64 glass-panel rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-medium text-kimi-textMuted uppercase tracking-wider">Conversations</span>
+                    <button class="p-1.5 rounded-lg hover:bg-white/5 text-kimi-textMuted hover:text-emerald-400 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+                    <div class="group p-3 rounded-xl bg-white/5 border border-emerald-500/20 cursor-pointer transition-all hover:bg-white/10">
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-kimi-text truncate font-medium">Project brainstorming</p>
+                                <p class="text-xs text-kimi-textMuted truncate mt-1">Just now</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="group p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-white/5">
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 rounded-full bg-kimi-textSubtle mt-2 shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-kimi-textMuted truncate">Code review assistance</p>
+                                <p class="text-xs text-kimi-textSubtle truncate mt-1">2 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="group p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-white/5">
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 rounded-full bg-kimi-textSubtle mt-2 shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-kimi-textMuted truncate">Creative writing ideas</p>
+                                <p class="text-xs text-kimi-textSubtle truncate mt-1">Yesterday</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-kimi-border">
+                    <button class="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 text-kimi-textMuted hover:text-kimi-text transition-colors text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Clear conversations
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Chat Area -->
+            <main class="flex-1 flex flex-col glass-panel rounded-2xl overflow-hidden relative">
+                <!-- Messages Area -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                    
+                    <!-- Welcome Message -->
+                    <div class="flex gap-4 animate-fade-in">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-kimi-text">Personal AI</span>
+                                <span class="text-xs text-kimi-textMuted">Just now</span>
+                            </div>
+                            <div class="message-bubble glass-panel rounded-2xl rounded-tl-sm p-4 max-w-3xl">
+                                <p class="text-kimi-text leading-relaxed">
+                                    Hello! I'm your personal AI assistant, inspired by Kimi's elegant design. I'm here to help you with coding, writing, analysis, or just having a conversation. What would you like to explore today?
+                                </p>
+                            </div>
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="sendQuickMessage('Help me write a Python script')" class="px-3 py-1.5 rounded-full text-xs bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-kimi-textMuted hover:text-emerald-400 transition-all">
+                                    Write Python script
+                                </button>
+                                <button onclick="sendQuickMessage('Explain quantum computing')" class="px-3 py-1.5 rounded-full text-xs bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-kimi-textMuted hover:text-emerald-400 transition-all">
+                                    Explain quantum computing
+                                </button>
+                                <button onclick="sendQuickMessage('Design a workout plan')" class="px-3 py-1.5 rounded-full text-xs bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-kimi-textMuted hover:text-emerald-400 transition-all">
+                                    Design workout plan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Input Area -->
+                <div class="border-t border-kimi-border p-4 bg-kimi-surface/50 backdrop-blur-xl">
+                    <div class="relative max-w-4xl mx-auto">
+                        <div class="glass-input rounded-2xl flex items-end gap-2 p-2 pr-3 shadow-lg">
+                            <button class="p-2 rounded-xl hover:bg-white/5 text-kimi-textMuted hover:text-kimi-text transition-colors shrink-0" title="Attach file">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                </svg>
+                            </button>
+                            
+                            <textarea 
+                                id="message-input" 
+                                rows="1" 
+                                class="flex-1 bg-transparent border-0 focus:ring-0 text-kimi-text placeholder-kimi-textMuted resize-none max-h-32 py-3 px-2 custom-scrollbar"
+                                placeholder="Message your AI assistant..."
+                                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                onkeydown="handleKeyDown(event)"
+                            ></textarea>
+                            
+                            <button 
+                                id="send-btn" 
+                                onclick="sendMessage()" 
+                                class="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                disabled
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="text-center mt-2">
+                            <p class="text-xs text-kimi-textSubtle">Personal AI can make mistakes. Consider checking important information.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        // Auto-resize textarea and enable/disable send button
+        messageInput.addEventListener('input', function() {
+            sendBtn.disabled = this.value.trim() === '';
+            if (this.value.trim() === '') {
+                this.style.height = 'auto';
+            }
+        });
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function sendQuickMessage(text) {
+            messageInput.value = text;
+            sendBtn.disabled = false;
+            messageInput.focus();
+            // Auto-resize
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            // Add user message
+            addMessage(text, 'user');
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            // Simulate AI typing
+            showTypingIndicator();
+            
+            // Simulate response after delay
+            setTimeout(() => {
+                removeTypingIndicator();
+                const responses = [
+                    "I understand you're asking about " + text.substring(0, 30) + "... That's an interesting topic! Let me provide you with a comprehensive answer based on my knowledge.",
+                    "Great question! Here's what I think about that: This is a complex topic with multiple perspectives. Would you like me to elaborate on any specific aspect?",
+                    "I've analyzed your request regarding '" + text.substring(0, 20) + "...' Here are my thoughts: This approach looks solid, though you might want to consider edge cases and potential optimizations.",
+                    "Thanks for sharing! Based on what you've told me, I'd suggest breaking this down into smaller steps. First, we should identify the core objectives..."
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                addMessage(randomResponse, 'ai');
+            }, 1500 + Math.random() * 1000);
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-4 animate-fade-in opacity-0';
+            messageDiv.style.animation = 'fadeIn 0.3s ease forwards';
+            
+            const isAI = sender === 'ai';
+            const avatarBg = isAI ? 'from-emerald-500 to-emerald-700' : 'from-gray-700 to-gray-900';
+            const avatarIcon = isAI ? 
+                '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' :
+                '<span class="text-xs font-medium text-gray-300">JD</span>';
+            
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br ${avatarBg} flex items-center justify-center shrink-0 shadow-lg ${isAI ? 'shadow-emerald-500/20' : ''}">
+                    ${avatarIcon}
+                </div>
+                <div class="flex-1 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-kimi-text">${isAI ? 'Personal AI' : 'You'}</span>
+                        <span class="text-xs text-kimi-textMuted">Just now</span>
+                    </div>
+                    <div class="message-bubble glass-panel rounded-2xl ${isAI ? 'rounded-tl-sm' : 'rounded-tr-sm'} p-4 max-w-3xl inline-block">
+                        <p class="text-kimi-text leading-relaxed whitespace-pre-wrap">${escapeHtml(text)}</p>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'flex gap-4';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-semibold text-kimi-text">Personal AI</span>
+                        <span class="text-xs text-kimi-textMuted">typing...</span>
+                    </div>
+                    <div class="glass-panel rounded-2xl rounded-tl-sm p-4 inline-flex items-center gap-1">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add fade-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Focus input on load
+        window.addEventListener('load', () => {
+            messageInput.focus();
+        });
+    </script>
+</body>
+</html>
